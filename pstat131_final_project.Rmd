@@ -1,0 +1,90 @@
+---
+title: "PSTAT 131 Final Project"
+author: 'Matthew Bulygo'
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+date: '2022-06-07'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Introduction
+
+In this project we will predict a video game's sales in order to find out what types of video games will be successful. 
+
+## Why Does This Matter?
+
+Video game companies are constantly innovating in order to stay successful and capture a wide audience. Finding out what types of games are popular will help them decide which games are worth creating. 
+
+## Loading Data and Packages
+
+This project uses data from a [Kaggle data set](https://www.kaggle.com/datasets/rush4ratio/video-game-sales-with-ratings?resource=download). The original data set has more than 16,000 observations with 16 variables. 
+
+```{r, message=FALSE}
+# Load packages
+set.seed(7)
+library(readr)
+library(tidyverse)
+library(tidymodels)
+library(patchwork)
+library(janitor)
+library(dplyr)
+```
+
+```{r}
+# Load dataset 
+original_videogame_data <- read_csv("videogame_data/Video_Games_Sales_as_at_22_Dec_2016.csv")
+original_videogame_data 
+```
+
+## Data Cleaning
+
+We use clean_names() to make it easier to work with the data and get rid of observations with missing values. Our dataset now has around 7,000 observations.
+```{r}
+videogame_data <- original_videogame_data %>% 
+  clean_names()
+videogame_data <- na.omit(videogame_data)
+videogame_data
+```
+We'll ignore na_sales, eu_sales, jp_sales, and other_sales and instead use global_sales to make analysis easier. We also get rid of developer since most people are only familiar with the publisher. Publishers also have lots of influence on video game developers so it will be more important to analyze the publishers. 
+
+```{r}
+videogame_data <- videogame_data %>%
+  select(-na_sales, -eu_sales, -jp_sales, -other_sales, -developer)
+```
+
+We'll only be analyzing the six best selling publishers since we want the best performing ones. We have too many publishers which will hinder our analysis. The publishers in our analysis all have over ten million global sales. 
+
+```{r}
+# Group data set by publisher and order by top selling publishers
+publisher <- videogame_data %>%
+  group_by(publisher) %>%
+    filter(global_sales == max(global_sales))
+  
+publisher[1:10,] %>%
+  select(publisher, global_sales)
+
+publisher[1:6,] %>%
+  select(publisher, global_sales)
+```
+```{r}
+# Create new variable where top 6 publishers will equal 1. If a video game has a top_publisher = 1, then it will join the new data set.  
+videogame_data$top_publisher=0
+
+videogame_data$top_publisher[(videogame_data$publisher=="Nintendo")| (videogame_data$publisher=="Activision")|  
+(videogame_data$publisher=="Sony Computer Entertainment")| (videogame_data$publisher=="Microsoft Game Studios")| (videogame_data$publisher=="Take-Two Interactive")| (videogame_data$publisher=="Ubisoft")]=1
+
+videogame_top_pub <- videogame_data[videogame_data$top_publisher==1,]
+videogame_top_pub
+```
+
+
+
+
+
+
+
