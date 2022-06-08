@@ -33,6 +33,7 @@ library(tidymodels)
 library(patchwork)
 library(janitor)
 library(dplyr)
+library(ggplot2)
 ```
 
 ```{r}
@@ -41,13 +42,14 @@ original_videogame_data <- read_csv("videogame_data/Video_Games_Sales_as_at_22_D
 original_videogame_data 
 ```
 
-## Data Cleaning
+# Data Cleaning
 
 We use clean_names() to make it easier to work with the data and get rid of observations with missing values. Our dataset now has around 7,000 observations.
 ```{r}
 videogame_data <- original_videogame_data %>% 
   clean_names()
 videogame_data <- na.omit(videogame_data)
+videogame_data$user_score <- as.numeric(as.character(videogame_data$user_score))
 videogame_data
 ```
 We'll ignore na_sales, eu_sales, jp_sales, and other_sales and instead use global_sales to make analysis easier. We also get rid of developer since most people are only familiar with the publisher. Publishers also have lots of influence on video game developers so it will be more important to analyze the publishers. 
@@ -78,9 +80,55 @@ videogame_data$top_publisher=0
 videogame_data$top_publisher[(videogame_data$publisher=="Nintendo")| (videogame_data$publisher=="Activision")|  
 (videogame_data$publisher=="Sony Computer Entertainment")| (videogame_data$publisher=="Microsoft Game Studios")| (videogame_data$publisher=="Take-Two Interactive")| (videogame_data$publisher=="Ubisoft")]=1
 
-videogame_top_pub <- videogame_data[videogame_data$top_publisher==1,]
-videogame_top_pub
+videogame_final <- videogame_data[videogame_data$top_publisher==1,]
+videogame_final <- videogame_final %>%
+  select(-top_publisher)
 ```
+
+# Exploratory Data Analysis
+
+```{r}
+genre <- videogame_final %>%
+  group_by(genre) %>%
+    filter(global_sales == max(global_sales))
+genre
+
+barplot(genre$global_sales, names.arg = genre$genre)
+```
+The best selling genres are sports, racing, platform, and action. 
+
+```{r}
+library(corrplot)
+videogame_final %>% 
+  select(is.numeric) %>% 
+  cor(use = "complete.obs") %>% 
+  corrplot(type = "lower", diag = FALSE)
+```
+
+
+
+
+# Model Building
+
+## Splitting the Data
+
+```{r}
+videogame_split <- initial_split(videogame_final, prop=0.7, strata=global_sales)
+videogame_train <- training(videogame_split)
+videogame_test <- testing(videogame_split)
+
+videogame_folds <- vfold_cv(videogame_train, v = 10, repeats = 5,
+                            strata=global_sales)
+```
+
+## Creating the Recipe
+
+```{r}
+videogame_recipe <- recipe(global_sales ~ ., data = videogame_train) %>% 
+  step_dummy(all_nominal_predictors()) %>% 
+  step_normalize(all_predictors())
+```
+
 
 
 
