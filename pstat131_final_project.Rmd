@@ -106,7 +106,7 @@ videogame_final %>%
   corrplot(type = "lower", diag = FALSE)
 ```
 
-
+Theres a positive correlation between user score and critic score. 
 
 
 # Model Building
@@ -130,7 +130,7 @@ videogame_recipe <- recipe(global_sales ~ ., data = videogame_train) %>%
   step_normalize(all_predictors())
 ```
 
-## Random Forest Model
+### Random Forest Model
 
 ```{r}
 # Use regression since response is continuous
@@ -147,9 +147,10 @@ rf_workflow <- workflow() %>%
 
 ```
 
-## Ridge Regression
+### Ridge Regression
 
 ```{r, eval=FALSE}
+# Create recipe
 ridge_recipe <- 
   recipe(global_sales ~ ., data = videogame_train) %>% 
   step_novel(all_nominal_predictors()) %>% 
@@ -180,7 +181,7 @@ autoplot(tune_res1)
 save(tune_res1, ridge_workflow, file = "model_fitting/tune_res1.rda")
 ```
 
-## Lasso Regression
+### Lasso Regression
 
 ```{r, eval=FALSE}
 lasso_recipe <- 
@@ -211,5 +212,52 @@ autoplot(tune_res2)
 
 save(tune_res2, lasso_workflow, file = "model_fitting/tune_res2.rda")
 ```
+
+## Model Analysis
+
+We load our saved results. 
+
+```{r}
+load("model_fitting/tune_res1.rda")
+load("model_fitting/tune_res2.rda")
+```
+
+### Ridge Regression
+
+```{r}
+autoplot(tune_res1)
+```
+
+```{r, warning=FALSE}
+best_penalty1 <- select_best(tune_res1, metric = "rsq")
+
+ridge_final <- finalize_workflow(ridge_workflow, best_penalty1)
+
+ridge_final_fit <- fit(ridge_final, data = videogame_train)
+
+augment(ridge_final_fit, new_data = videogame_test) %>%
+  rsq(truth = global_sales, estimate = .pred)
+```
+### Lasso Regression
+
+```{r, warning=FALSE}
+autoplot(tune_res2)
+
+best_penalty2 <- select_best(tune_res2, metric = "rsq")
+
+lasso_final <- finalize_workflow(lasso_workflow, best_penalty2)
+
+lasso_final_fit <- fit(lasso_final, data = videogame_train)
+
+augment(ridge_final_fit, new_data = videogame_test) %>%
+  rsq(truth = global_sales, estimate = .pred)
+```
+
+The R-squared for both lasso and ridge regression is 0.535. 
+
+
+
+
+
 
 
