@@ -51,8 +51,8 @@ videogame_data <- original_videogame_data %>%
   clean_names()
 videogame_data <- na.omit(videogame_data)
 videogame_data$user_score <- as.numeric(as.character(videogame_data$user_score))
-videogame_data
 ```
+
 We'll ignore na_sales, eu_sales, jp_sales, and other_sales and instead use global_sales to make analysis easier. We also get rid of developer since most people are only familiar with the publisher. Publishers also have lots of influence on video game developers so it will be more important to analyze the publishers. 
 
 ```{r}
@@ -60,7 +60,8 @@ videogame_data <- videogame_data %>%
   select(-na_sales, -eu_sales, -jp_sales, -other_sales, -developer)
 ```
 
-We'll only be analyzing the six best selling publishers since we want the best performing ones. We have too many publishers which will hinder our analysis. The publishers in our analysis all have over ten million global sales. 
+
+We'll only be analyzing the six best selling publishers since we want the best performing ones. We have too many publishers which will hinder our analysis. The publishers in our analysis all have over ten million global sales. Our final data set has around 2000 observations and 11 variables.
 
 ```{r}
 # Group data set by publisher and order by top selling publishers
@@ -74,6 +75,7 @@ publisher[1:10,] %>%
 publisher[1:6,] %>%
   select(publisher, global_sales)
 ```
+
 ```{r}
 # Create new variable where top 6 publishers will equal 1. If a video game has a top_publisher = 1, then it will join the new data set.  
 videogame_data$top_publisher=0
@@ -84,6 +86,7 @@ videogame_data$top_publisher[(videogame_data$publisher=="Nintendo")| (videogame_
 videogame_final <- videogame_data[videogame_data$top_publisher==1,]
 videogame_final <- videogame_final %>%
   select(-top_publisher)
+videogame_final
 ```
 
 # Exploratory Data Analysis
@@ -94,10 +97,12 @@ genre <- videogame_final %>%
     filter(global_sales == max(global_sales))
 genre
 
-barplot(genre$global_sales, names.arg = genre$genre)
+barplot(genre$global_sales, names.arg = genre$genre, ylab="# of
+        games sold (million)", xlab='Genre', las=2, cex.names=0.8,
+        cex.lab=0.8)
 ```
 
-The best selling genres are sports, racing, platform, and action. 
+The best selling genres are sports, racing, and platform. 
 
 ```{r}
 videogame_final %>% 
@@ -113,6 +118,7 @@ Theres a positive correlation between user score and critic score.
 
 ## Splitting the Data
 
+We split the data into training and test sets. 
 ```{r}
 videogame_split <- initial_split(videogame_final, prop=0.7, strata=global_sales)
 videogame_train <- training(videogame_split)

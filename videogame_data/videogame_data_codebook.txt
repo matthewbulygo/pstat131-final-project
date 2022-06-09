@@ -1,2 +1,23 @@
 name: Name of video game
-platform: 
+
+platform: console the video game is running on
+
+year_of_release: year the game was released
+
+genre: game's category (example: sports, action, adventure)
+
+publisher: publisher of video game
+
+global_sales: total sales in the world (in millions of units)
+
+critic_score: aggregate score compiled by Metacritic
+
+critic_count: number of critics used to calculate critic_score
+
+user_score: score by Metacritic subscribers
+
+user_count: number of users used to calculate user_score
+
+developer: people who created the game
+
+rating: ESRB ratings (example: everyone, teens, adults)
