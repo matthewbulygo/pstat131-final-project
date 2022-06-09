@@ -95,6 +95,7 @@ genre
 
 barplot(genre$global_sales, names.arg = genre$genre)
 ```
+
 The best selling genres are sports, racing, platform, and action. 
 
 ```{r}
@@ -129,10 +130,86 @@ videogame_recipe <- recipe(global_sales ~ ., data = videogame_train) %>%
   step_normalize(all_predictors())
 ```
 
+## Random Forest Model
 
+```{r}
+# Use regression since response is continuous
+rf_model <- 
+  rand_forest(
+              min_n = tune(),
+              mtry = tune(),
+              mode = "regression") %>% 
+  set_engine("ranger")
 
+rf_workflow <- workflow() %>% 
+  add_model(rf_model) %>% 
+  add_recipe(videogame_recipe)
 
+```
 
+## Ridge Regression
 
+```{r, eval=FALSE}
+ridge_recipe <- 
+  recipe(global_sales ~ ., data = videogame_train) %>% 
+  step_novel(all_nominal_predictors()) %>% 
+  step_dummy(all_nominal_predictors()) %>% 
+  step_zv(all_predictors()) %>% 
+  step_normalize(all_predictors())
+
+ridge_spec <- 
+  linear_reg(penalty = tune(), mixture = 0) %>% 
+  set_mode("regression") %>% 
+  set_engine("glmnet")
+
+ridge_workflow <- workflow() %>% 
+  add_recipe(videogame_recipe) %>% 
+  add_model(ridge_spec)
+
+penalty_grid <- grid_regular(penalty(range = c(-5, 5)), levels = 50)
+penalty_grid
+
+tune_res1 <- tune_grid(
+  ridge_workflow,
+  resamples = videogame_folds, 
+  grid = penalty_grid
+)
+
+autoplot(tune_res1)
+
+save(tune_res1, ridge_workflow, file = "model_fitting/tune_res1.rda")
+```
+
+## Lasso Regression
+
+```{r, eval=FALSE}
+lasso_recipe <- 
+  recipe(global_sales ~ ., data = videogame_train) %>% 
+  step_novel(all_nominal_predictors()) %>% 
+  step_dummy(all_nominal_predictors()) %>% 
+  step_zv(all_predictors()) %>% 
+  step_normalize(all_predictors())
+
+lasso_spec <- 
+  linear_reg(penalty = tune(), mixture = 1) %>% 
+  set_mode("regression") %>% 
+  set_engine("glmnet") 
+
+lasso_workflow <- workflow() %>% 
+  add_recipe(lasso_recipe) %>% 
+  add_model(lasso_spec)
+
+penalty_grid <- grid_regular(penalty(range = c(-2, 2)), levels = 50)
+
+tune_res2 <- tune_grid(
+  lasso_workflow,
+  resamples = videogame_folds, 
+  grid = penalty_grid
+)
+
+autoplot(tune_res2)
+
+save(tune_res2, lasso_workflow, file = "model_fitting/tune_res2.rda")
+```
 
 
