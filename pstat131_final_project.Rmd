@@ -63,7 +63,7 @@ videogame_data <- videogame_data %>%
 
 We'll only be analyzing the six best selling publishers since we want the best performing ones. We have too many publishers which will hinder our analysis. The publishers in our analysis all have over ten million global sales. Our final data set has around 2000 observations and 11 variables.
 
-```{r}
+```{r, results='hide'}
 # Group data set by publisher and order by top selling publishers
 publisher <- videogame_data %>%
   group_by(publisher) %>%
@@ -91,12 +91,15 @@ videogame_final
 
 # Exploratory Data Analysis
 
-```{r}
+```{r, results='hide'}
 genre <- videogame_final %>%
   group_by(genre) %>%
     filter(global_sales == max(global_sales))
 genre
+```
 
+
+```{r}
 barplot(genre$global_sales, names.arg = genre$genre, ylab="# of
         games sold (million)", xlab='Genre', las=2, cex.names=0.8,
         cex.lab=0.8)
@@ -104,7 +107,7 @@ barplot(genre$global_sales, names.arg = genre$genre, ylab="# of
 
 The best selling genres are sports, racing, and platform. 
 
-```{r}
+```{r, warning=FALSE}
 videogame_final %>% 
   select(is.numeric) %>% 
   cor(use = "complete.obs") %>% 
