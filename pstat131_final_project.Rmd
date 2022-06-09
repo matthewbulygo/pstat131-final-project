@@ -34,6 +34,7 @@ library(patchwork)
 library(janitor)
 library(dplyr)
 library(ggplot2)
+library(corrplot)
 ```
 
 ```{r}
@@ -99,7 +100,6 @@ barplot(genre$global_sales, names.arg = genre$genre)
 The best selling genres are sports, racing, platform, and action. 
 
 ```{r}
-library(corrplot)
 videogame_final %>% 
   select(is.numeric) %>% 
   cor(use = "complete.obs") %>% 
